@@ -1,0 +1,53 @@
+{
+  "templates": {
+    "R_s": {
+      "name": "溶液电阻",
+      "description": "单电阻模型",
+      "circuit_expr": "R_s",
+      "parameters": ["R_s"],
+      "initial_guess": [10.0],
+      "bounds": [[0.0], [1e6]]
+    },
+    "R_s-R_para-C_para": {
+      "name": "RC并联模型",
+      "description": "溶液电阻串联RC并联",
+      "circuit_expr": "R_s + R_para/(1+j*w*C_para*R_para)",
+      "parameters": ["R_s", "R_para", "C_para"],
+      "initial_guess": [10.0, 100.0, 1e-5],
+      "bounds": [[0.0, 0.0, 1e-12], [1e6, 1e8, 1.0]]
+    },
+    "R_s-CPE": {
+      "name": "常相位元件模型",
+      "description": "溶液电阻串联CPE",
+      "circuit_expr": "R_s + 1/(Y0*(j*w)^n)",
+      "parameters": ["R_s", "Y0", "n"],
+      "initial_guess": [10.0, 1e-5, 0.9],
+      "bounds": [[0.0, 1e-12, 0.5], [1e6, 1.0, 1.0]]
+    },
+    "R_s-R_para-CPE": {
+      "name": "RQ并联模型",
+      "description": "溶液电阻串联RQ并联",
+      "circuit_expr": "R_s + R_para/(1+R_para*Y0*(j*w)^n)",
+      "parameters": ["R_s", "R_para", "Y0", "n"],
+      "initial_guess": [10.0, 100.0, 1e-5, 0.9],
+      "bounds": [[0.0, 0.0, 1e-12, 0.5], [1e6, 1e8, 1.0, 1.0]]
+    },
+    "R_s-R_para-C_para-W": {
+      "name": "Randles模型",
+      "description": "含Warburg扩散阻抗",
+      "circuit_expr": "R_s + R_para/(1+j*w*C_para*R_para) + W*sqrt(w)*(1-j)",
+      "parameters": ["R_s", "R_para", "C_para", "W"],
+      "initial_guess": [10.0, 100.0, 1e-5, 50.0],
+      "bounds": [[0.0, 0.0, 1e-12, 0.0], [1e6, 1e8, 1.0, 1e4]]
+    },
+    "R_s-R1-C1-R2-C2": {
+      "name": "双时间常数模型",
+      "description": "两段RC并联串联",
+      "circuit_expr": "R_s + R1/(1+j*w*C1*R1) + R2/(1+j*w*C2*R2)",
+      "parameters": ["R_s", "R1", "C1", "R2", "C2"],
+      "initial_guess": [10.0, 100.0, 1e-5, 200.0, 1e-6],
+      "bounds": [[0.0, 0.0, 1e-12, 0.0, 1e-12], [1e6, 1e8, 1.0, 1e8, 1.0]]
+    }
+  },
+  "default_template": "R_s-R_para-C_para"
+}

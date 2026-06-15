@@ -1,0 +1,30 @@
+{
+  "devices": {
+    "AutoLab": {
+      "impedance_calibration_factor": 1.0,
+      "phase_calibration_offset": 0.0,
+      "frequency_range_hz": [1e-3, 1e6],
+      "valid": true
+    },
+    "Gamry": {
+      "impedance_calibration_factor": 1.0,
+      "phase_calibration_offset": 0.0,
+      "frequency_range_hz": [1e-3, 1e6],
+      "valid": true
+    },
+    "Solartron": {
+      "impedance_calibration_factor": 1.0,
+      "phase_calibration_offset": 0.0,
+      "frequency_range_hz": [1e-4, 1e7],
+      "valid": true
+    },
+    "CHI": {
+      "impedance_calibration_factor": 1.0,
+      "phase_calibration_offset": 0.0,
+      "frequency_range_hz": [1e-2, 1e5],
+      "valid": true
+    }
+  },
+  "default_device": "AutoLab",
+  "last_calibration_date": "2026-01-15"
+}
