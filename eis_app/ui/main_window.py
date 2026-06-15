@@ -22,6 +22,7 @@ from ..fitting.fitting_engine import FittingEngine, FittingResult
 from ..plotting.dual_canvas import DualPlotCanvas
 from ..database.db_manager import DatabaseManager, SampleRecord
 from ..export.data_exporter import DataExporter
+from ..batch.batch_dialog import BatchProcessDialog
 from .menu_manager import MenuManager
 
 
@@ -229,11 +230,14 @@ class MainWindow(QMainWindow):
         btn_row = QHBoxLayout()
         self.btn_add = QPushButton("导入文件")
         self.btn_add.clicked.connect(self._on_open_file)
+        self.btn_batch = QPushButton("批量处理")
+        self.btn_batch.clicked.connect(self._on_batch_process)
         self.btn_del = QPushButton("删除")
         self.btn_del.clicked.connect(self._on_delete_sample)
         self.btn_clear = QPushButton("清空")
         self.btn_clear.clicked.connect(self._on_clear_all)
         btn_row.addWidget(self.btn_add)
+        btn_row.addWidget(self.btn_batch)
         btn_row.addWidget(self.btn_del)
         btn_row.addWidget(self.btn_clear)
         grp_layout.addLayout(btn_row)
@@ -387,6 +391,7 @@ class MainWindow(QMainWindow):
         actions = {
             "open": self._on_open_file,
             "open_batch": self._on_open_batch,
+            "batch_process": self._on_batch_process,
             "export_single_csv": self._on_export_single_csv,
             "export_batch_csv": self._on_export_batch_csv,
             "export_params": self._on_export_params,
@@ -517,6 +522,32 @@ class MainWindow(QMainWindow):
         if paths:
             for p in paths:
                 self._import_file(p)
+
+    def _on_batch_process(self):
+        dialog = BatchProcessDialog(self.template_manager, self.db_manager, self)
+        if dialog.exec() == QDialog.Accepted:
+            samples = dialog.get_importable_samples()
+            if samples:
+                count = 0
+                for data, fit_result in samples:
+                    key = f"batch_{len(self._samples)}_{data.sample_id}"
+                    while key in self._samples:
+                        key = key + "_"
+                    db_id = None
+                    if self.db_manager:
+                        existing = self.db_manager.get_samples_by_batch(data.batch_id)
+                        for rec in existing:
+                            if rec.sample_id == data.sample_id:
+                                db_id = rec.id
+                                break
+                    self._samples[key] = (data, fit_result, db_id)
+                    self._add_sample_to_list(key, data, fit_result)
+                    if data.is_valid:
+                        self.plot_canvas.add_sample(data, fit_result)
+                        count += 1
+                self.lbl_count.setText(str(len(self._samples)))
+                self._set_status(f"已从批量处理导入 {count} 个样品")
+                self._update_ui_state()
 
     def _import_file(self, file_path: str):
         batch_id = self.lbl_batch.text().strip()

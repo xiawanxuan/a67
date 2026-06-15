@@ -33,6 +33,8 @@ class MenuManager:
                          shortcut="Ctrl+O", status_tip="打开 EIS 阻抗谱数据文件")
         self._add_action(menu, "open_batch", "批量导入...", actions.get("open_batch"),
                          shortcut="Ctrl+Shift+O", status_tip="批量导入多个 EIS 数据文件")
+        self._add_action(menu, "batch_process", "批量处理文件夹...", actions.get("batch_process"),
+                         shortcut="Ctrl+B", status_tip="遍历文件夹批量拟合并导出结果")
         menu.addSeparator()
         self._add_action(menu, "export_single_csv", "导出当前样品CSV", actions.get("export_single_csv"),
                          status_tip="导出当前选中样品为CSV")

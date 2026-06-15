@@ -3,6 +3,7 @@ from .fitting import FittingEngine, CircuitTemplate
 from .plotting import DualPlotCanvas
 from .database import DatabaseManager
 from .export import DataExporter
+from .batch import BatchProcessor, BatchProcessingOptions, BatchResult, BatchProcessDialog
 
 __version__ = "1.0.0"
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     "DualPlotCanvas",
     "DatabaseManager",
     "DataExporter",
+    "BatchProcessor", "BatchProcessingOptions", "BatchResult", "BatchProcessDialog",
 ]
