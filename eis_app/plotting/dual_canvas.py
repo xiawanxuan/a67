@@ -129,6 +129,8 @@ class _BodeCanvas(FigureCanvas):
         self.ax_mag.set_title("波特图", fontsize=11, fontfamily="SimHei")
         self.ax_mag.grid(True, which="both", linestyle="--", alpha=0.6)
 
+        if not self.ax_phase.get_shared_x_axes().joined(self.ax_phase, self.ax_mag):
+            self.ax_phase.sharex(self.ax_mag)
         self.ax_phase.set_xscale("log")
         self.ax_phase.set_xlabel("频率 f (Hz)", fontsize=10, fontfamily="SimHei")
         self.ax_phase.set_ylabel("相位 φ (°)", fontsize=10, fontfamily="SimHei")
@@ -221,18 +223,44 @@ class _BodeCanvas(FigureCanvas):
         valid = [s for s in samples if s.data.is_valid]
         if not valid:
             return
+
         all_freq = np.concatenate([s.data.frequencies for s in valid])
         all_mag = np.concatenate([s.data.z_magnitude for s in valid])
         all_phase = np.concatenate([s.data.z_phase for s in valid])
-        margin = 0.1
-        fmin, fmax = all_freq.min(), all_freq.max()
-        mmin, mmax = all_mag.min(), all_mag.max()
-        pmin, pmax = all_phase.min(), all_phase.max()
-        self.ax_mag.set_xlim(fmin * (1 - margin), fmax * (1 + margin))
-        self.ax_mag.set_ylim(mmin * (1 - margin), mmax * (1 + margin))
-        dp = pmax - pmin
-        d = dp * margin if dp > 0 else 5
-        self.ax_phase.set_ylim(pmin - d, pmax + d)
+
+        log_margin = 0.15
+        fmin, fmax = float(np.nanmin(all_freq)), float(np.nanmax(all_freq))
+        if fmin > 0 and fmax > fmin:
+            fmin_set = fmin / (1.0 + log_margin)
+            fmax_set = fmax * (1.0 + log_margin)
+            self.ax_mag.set_xlim(fmin_set, fmax_set)
+
+        m_valid = all_mag[all_mag > 0]
+        if len(m_valid) > 0:
+            mmin, mmax = float(np.nanmin(m_valid)), float(np.nanmax(m_valid))
+            if mmax > mmin > 0:
+                mmin_set = mmin / (1.0 + log_margin)
+                mmax_set = mmax * (1.0 + log_margin)
+                self.ax_mag.set_ylim(mmin_set, mmax_set)
+
+        p_valid = all_phase[~np.isnan(all_phase)]
+        if len(p_valid) > 0:
+            pmin, pmax = float(np.nanmin(p_valid)), float(np.nanmax(p_valid))
+            dp = pmax - pmin
+            if dp < 0.5:
+                center = (pmin + pmax) * 0.5
+                pmin_set = center - 5.0
+                pmax_set = center + 5.0
+            else:
+                pad = max(dp * 0.15, 2.0)
+                pmin_set = pmin - pad
+                pmax_set = pmax + pad
+
+            if pmin_set < -180.0:
+                pmin_set = -180.0
+            if pmax_set > 180.0:
+                pmax_set = 180.0
+            self.ax_phase.set_ylim(pmin_set, pmax_set)
 
 
 class DualPlotCanvas(QWidget):
@@ -415,5 +443,34 @@ class DualPlotCanvas(QWidget):
                 ax_nyq.set_xlim(all_real.min() - d, all_real.max() + d)
                 ax_nyq.set_ylim(all_imag.min() - d, all_imag.max() + d)
                 ax_nyq.set_aspect("equal", adjustable="datalim")
+
+            all_freq = np.concatenate([s.data.frequencies for s in samples if s.data.is_valid])
+            all_mag = np.concatenate([s.data.z_magnitude for s in samples if s.data.is_valid])
+            all_phase = np.concatenate([s.data.z_phase for s in samples if s.data.is_valid])
+
+            log_margin = 0.15
+            fmin, fmax = float(np.nanmin(all_freq)), float(np.nanmax(all_freq))
+            if fmin > 0 and fmax > fmin:
+                ax_mag.set_xlim(fmin / (1.0 + log_margin), fmax * (1.0 + log_margin))
+
+            m_valid = all_mag[all_mag > 0]
+            if len(m_valid) > 0:
+                mmin, mmax = float(np.nanmin(m_valid)), float(np.nanmax(m_valid))
+                if mmax > mmin > 0:
+                    ax_mag.set_ylim(mmin / (1.0 + log_margin), mmax * (1.0 + log_margin))
+
+            p_valid = all_phase[~np.isnan(all_phase)]
+            if len(p_valid) > 0:
+                pmin, pmax = float(np.nanmin(p_valid)), float(np.nanmax(p_valid))
+                dp = pmax - pmin
+                if dp < 0.5:
+                    center = (pmin + pmax) * 0.5
+                    pmin_set, pmax_set = center - 5.0, center + 5.0
+                else:
+                    pad = max(dp * 0.15, 2.0)
+                    pmin_set, pmax_set = pmin - pad, pmax + pad
+                pmin_set = max(pmin_set, -180.0)
+                pmax_set = min(pmax_set, 180.0)
+                ax_phase.set_ylim(pmin_set, pmax_set)
 
         combined_fig.savefig(file_path, dpi=dpi, bbox_inches="tight")
